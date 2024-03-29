@@ -9,11 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+##Merging 2 data frames
 
 ```{r}
 library(ggplot2)
@@ -21,16 +17,32 @@ library(tidyverse)
 library(dplyr)
 
 #(PUF2015_021518)
-df <- read.csv("https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000", header=TRUE, stringsAsFactors=FALSE);
+df <-
+  read.csv(
+    "https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000",
+    header = TRUE,
+    stringsAsFactors = FALSE
+  )
 
-df2 <- read.csv("https://query.data.world/s/6xhwdm7emdeglx4botceotj6udfevo?dws=00000", header=TRUE, stringsAsFactors=FALSE)
 
-head(df)
-head(df2)
-dim(df)
-dim(df2)
-summary(df)
-summary(df2)
+df2 <-
+  read.csv(
+    "https://query.data.world/s/6xhwdm7emdeglx4botceotj6udfevo?dws=00000",
+    header = TRUE,
+    stringsAsFactors = FALSE
+  )
+
+#Merges df (draft info and general stats) and df2 (salary statistics)
+nba_stats <-
+  merge(df2,
+        df1,
+        by.x = "player_id",
+        by.y = "X_id",
+        all.x = TRUE)
+
+head(nba_stats)
+dim(nba_stats)
+summary(nba_stats)
 ```
 Questions to possibly research
 
@@ -46,12 +58,14 @@ What position in basketball seems to contribute to winning the most?
 Ideas
 Look to model the perfect NBA "prospect"
 Utilize comparative analysis in order to predict future player success.
-```{r}
 
-df_filtered <- df %>%
+```{r}
+#Gets rid of players that were drafted before 1980
+nba_stats <- nba_stats %>%
   filter(draft_year >= 1980)
 
-df <- df_filtered %>% 
+#Gets rid of empty row values and replaces them with NA
+nba_stats <- nba_stats %>% 
   mutate(across(where(is.character), ~na_if(.x, "")))
 
 ```
