@@ -18,6 +18,7 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r}
 library(ggplot2)
 library(tidyverse)
+library(dplyr)
 
 #(PUF2015_021518)
 df <- read.csv("https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000", header=TRUE, stringsAsFactors=FALSE);
@@ -28,7 +29,8 @@ head(df)
 head(df2)
 dim(df)
 dim(df2)
-dim(PUF2015_021518)
+summary(df)
+summary(df2)
 ```
 Questions to possibly research
 
@@ -44,12 +46,13 @@ What position in basketball seems to contribute to winning the most?
 Ideas
 Look to model the perfect NBA "prospect"
 Utilize comparative analysis in order to predict future player success.
-## Including Plots
+```{r}
 
-You can also embed plots, for example:
+df_filtered <- df %>%
+  filter(draft_year >= 1980)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+df <- df_filtered %>% 
+  mutate(across(where(is.character), ~na_if(.x, "")))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
