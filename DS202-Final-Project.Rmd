@@ -1,5 +1,5 @@
 ---
-title: "DS Final"
+title: "Evaluation of basketball statistics"
 author: "Blake Nelson, Nick Olech"
 date: "2024-03-28"
 output: html_document
@@ -9,42 +9,71 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-##Merging 2 data frames
+# Description of Data Set
 
-```{r}
+For our project we are combining two different data sets.  The first data frame has information for each player such as personal information and draft information like what position, draft year, and draft team.  The second dataframe gives year by year information for each player in the first data frame. This information includes salary, season, and team.
+
+### Loading packages and data frames
+```{r, message=FALSE, error=FALSE, warning=FALSE}
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
+```
 
-#(PUF2015_021518)
-df <-
+```{r}
+#Draft information Data Frame
+df1 <-
   read.csv(
     "https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000",
     header = TRUE,
     stringsAsFactors = FALSE
   )
 
-
+#Salary information Data Frame
 df2 <-
   read.csv(
     "https://query.data.world/s/6xhwdm7emdeglx4botceotj6udfevo?dws=00000",
     header = TRUE,
     stringsAsFactors = FALSE
   )
+```
 
-#Merges df (draft info and general stats) and df2 (salary statistics)
+# First Data Cleaning Steps
+
+```{r}
+#Merge df1 (draft info) and df2 (salary statistics)
 nba_stats <-
   merge(df2,
         df1,
         by.x = "player_id",
         by.y = "X_id",
         all.x = TRUE)
+```
 
+```{r}
+#Drop player that were drafted before 1980
+nba_stats <- nba_stats %>%
+  filter(draft_year >= 1980)
+
+#Replaces empty values with NA
+nba_stats <- nba_stats %>% 
+  mutate(across(where(is.character), ~na_if(.x, "")))
+```
+
+# Marginal Summaries
+```{r}
 head(nba_stats)
-dim(nba_stats)
+```
+
+```{r}
 summary(nba_stats)
 ```
-Questions to possibly research
+
+```{r}
+dim(nba_stats)
+```
+
+# Questions to possibly research
 
 What is the ideal height/weight (build) of an NBA Player?
 - Could look at how salary relates to certain measurements a player has.
@@ -58,15 +87,4 @@ What position in basketball seems to contribute to winning the most?
 Ideas
 Look to model the perfect NBA "prospect"
 Utilize comparative analysis in order to predict future player success.
-
-```{r}
-#Gets rid of players that were drafted before 1980
-nba_stats <- nba_stats %>%
-  filter(draft_year >= 1980)
-
-#Gets rid of empty row values and replaces them with NA
-nba_stats <- nba_stats %>% 
-  mutate(across(where(is.character), ~na_if(.x, "")))
-
-```
 
