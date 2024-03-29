@@ -15,10 +15,35 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
-```
+```{r}
+library(ggplot2)
+library(tidyverse)
 
+#(PUF2015_021518)
+df <- read.csv("https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000", header=TRUE, stringsAsFactors=FALSE);
+
+df2 <- read.csv("https://query.data.world/s/6xhwdm7emdeglx4botceotj6udfevo?dws=00000", header=TRUE, stringsAsFactors=FALSE)
+
+head(df)
+head(df2)
+dim(df)
+dim(df2)
+dim(PUF2015_021518)
+```
+Questions to possibly research
+
+What is the ideal height/weight (build) of an NBA Player?
+- Could look at how salary relates to certain measurements a player has.
+
+Does where you are born influence your likely hood of NBA success?
+- Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
+
+What position in basketball seems to contribute to winning the most?
+- Could look to analyze win shares and other statistics relating to positions.
+
+Ideas
+Look to model the perfect NBA "prospect"
+Utilize comparative analysis in order to predict future player success.
 ## Including Plots
 
 You can also embed plots, for example:
