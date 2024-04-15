@@ -129,114 +129,89 @@ nba_birthplace_summary <- nba_stats %>%
   ungroup() %>%
   count(State_Country, sort = TRUE)
 
-#Plot which states/countries have the most players (top 10)
-N <- 10
-
-#Creat varaible that shows where most players are from (state/country)
-top_nba_locations <- nba_birthplace_summary %>%
-  top_n(N, n) %>%
-  arrange(desc(n))
-
-#Graph Findings
-ggplot(top_nba_locations, aes(x = reorder(State_Country, n), y = n)) +
-  geom_bar(stat = "identity") +
-  labs(x = "State/Country", y = "Number of Players", 
-       title = "Number of NBA Players by State/Country") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-#Get a table that shows output
-print(nba_birthplace_summary)
-
-
-
-
-
-
-
-```
-Population for each state/country
--California 39.03 M
--New York 19.68 M
--Illinois 12.58 M
--Texas 30.03 M
--Georgia 10.91 M
-
-```{r}
-#Find players per state (One NBA player every x people)
-Players_CA <- 39030000 / 184 
-Players_NY <- 19680000 / 117
-Players_IL <- 12580000 / 92
-Players_TX <- 30030000 / 68
-Players_GA <- 10910000 / 65
-
-print(Players_CA)
-print(Players_NY)
-print(Players_IL)
-print(Players_TX)
-print(Players_GA)
-
-```
-
-
-
-```{r}
 #Same thing now, except group by city
-nba_birthplace_city_summary <- nba_stats %>%
+nba_birthplacecity_summary <- nba_stats %>%
   distinct(player_id, .keep_all = TRUE) %>%
   separate(birthPlace, into = c("City", "State_Country"), sep = ", ", extra = "merge") %>%
   group_by(player_id, City) %>%
   ungroup() %>%
   count(City, sort = TRUE)
 
-#Plot which cities have the most players (top 10)
-top_nba_locations_cities <- nba_birthplace_city_summary %>%
-  top_n(N, n) %>%
-  arrange(desc(n))
 
-#Plot findings
-ggplot(top_nba_locations_cities, aes(x = reorder(City, n), y = n)) +
-  geom_bar(stat = "identity") +
-  labs(x = "City", y = "Number of Players", 
-       title = "Number of NBA Players by City") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-#Print table
-print(nba_birthplace_city_summary)
+
+
+
+
 
 ```
-Populations for each city
--Los Angeles: 3.822 M
--Chicago 2.665 M
--Philadelphia 1.567 M
--Washington 671803
--Detroit 620376
-```{r}
-#Find players per state (One NBA player every x people)
-Players_LA <- 3822000 / 54 
-Players_CHI <- 2665000 / 49
-Players_PHIL <- 1567000 / 34
-Players_WSH <- 671803 / 31
-Players_DET <- 620376 / 28
-
-print(Players_LA)
-print(Players_CHI)
-print(Players_PHIL)
-print(Players_WSH)
-print(Players_DET)
-```
-
-
 
 
 # Questions to possibly research
 
 What is the ideal height/weight (build) of an NBA Player?
 - Could look at how salary relates to certain measurements a player has.
+```{r}
+str(nba_stats)
+# Create a copy of nba_stats
+ns_w_cd <- nba_stats
+
+# Add career_duration column
+ns_w_cd$career_duration <- ifelse(ns_w_cd$career_G > 4*82, "Over 4 Years", "Under 4 Years")
+
+# Filter to include only unique player IDs
+unique_players <- ns_w_cd %>% 
+  distinct(player_id, .keep_all = TRUE)
+
+# Plotting the correlation between weight and career duration
+weight_duration_plot <- ggplot(unique_players, aes(x = weight, y = career_G, color = career_duration)) +
+  geom_point() +
+  geom_smooth(aes(group = career_duration), method = "lm", se = FALSE, color = "black") +  # Add black linear regression lines
+  labs(title = "Correlation between Weight and Career Duration (Unique Players)", x = "Weight", y = "Career Duration") +
+  theme_minimal()
+
+# Display the plot
+print(weight_duration_plot)
+
+# Plotting the correlation between height and career duration
+height_duration_plot <- ggplot(unique_players, aes(x = height, y = career_G, color = career_duration)) +
+  geom_point() +
+  geom_smooth(aes(group = career_duration), method = "lm", se = FALSE, color = "black") +  # Add black linear regression lines
+  labs(title = "Correlation between Height and Career Duration (Unique Players)", x = "Height", y = "Career Duration") +
+  theme_minimal()
+
+# Display the plot
+print(height_duration_plot)
+```
+
+```{r}
+# Convert height from feet-inches format to inches
+height_inches <- sapply(strsplit(unique_players$height, "-"), function(x) as.numeric(x[1]) * 12 + as.numeric(x[2]))
+
+# Calculate average height (in inches) and weight (in pounds)
+average_height_inches <- mean(height_inches, na.rm = TRUE)
+average_weight <- mean(as.numeric(gsub("lb", "", unique_players$weight)), na.rm = TRUE)
+
+# Convert average height from inches to feet-inches format
+average_height_feet <- floor(average_height_inches / 12)
+average_height_remainder <- round(average_height_inches %% 12)
+average_height <- paste(average_height_feet, "ft", average_height_remainder, "in")
+
+# Print the results
+cat("Average Height:", average_height, "\n")
+cat("Average Weight:", round(average_weight, 2), "lb\n")
+
+```
 
 Does where you are born influence your likely hood of NBA success?
 - Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
 
 What position in basketball seems to contribute to winning the most?
+
+```{r}
+
+
+```
 - Could look to analyze win shares and other statistics relating to positions.
 
 Ideas
