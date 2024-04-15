@@ -18,6 +18,7 @@ For our project we are combining two different data sets.  The first data frame 
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
+library(scales)
 ```
 
 ```{r}
@@ -51,7 +52,7 @@ nba_stats <-
 ```
 
 ```{r}
-#Drop player that were drafted before 1980
+#Drop player that were drafted before 1980 
 nba_stats <- nba_stats %>%
   filter(draft_year >= 1980)
 
@@ -59,6 +60,7 @@ nba_stats <- nba_stats %>%
 nba_stats <- nba_stats %>% 
   mutate(across(where(is.character), ~na_if(.x, "")))
 ```
+Note: Players that were drafted before 1980 are not accounted for in order to be more indicative of the modern era.
 
 # Marginal Summaries
 ```{r}
@@ -72,6 +74,78 @@ summary(nba_stats)
 ```{r}
 dim(nba_stats)
 ```
+First I want to look at the overall salaries that are listed in this dataset to get a sort of gague of what the numbers should look like.
+```{r}
+#Make so there are no repeat id's and get salary statistics
+nba_salary_summary <- nba_stats %>%
+  group_by(player_id) %>%
+  summarize(
+    Total_Salary = sum(salary, na.rm = TRUE),
+    Average_Salary = mean(salary, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+#Graph to see how much the average player made over their career
+ggplot(data = nba_salary_summary, aes(x = Total_Salary)) +
+  geom_histogram(binwidth = 1000000) +
+  scale_x_continuous(labels = label_number()) +
+  labs(title = "Histogram of NBA Total Salaries",
+       x = "Total Salary",
+       y = "Frequency") +
+  theme_minimal()
+
+#Graph to see how much the average player makes over the course of one singular season
+ggplot(data = nba_salary_summary, aes(x = Average_Salary)) +
+  geom_histogram(binwidth = 100000) +
+  scale_x_continuous(labels = label_number()) +
+  labs(title = "Histogram of NBA Average Salaries",
+       x = "Average Salary",
+       y = "Frequency") +
+  theme_minimal()
+
+```
+I am a little concerned that this dataset is not representative of how much players have made but since the data is pre 2019 this makes sense.
+
+NBA salaries are increasingly inflated, especially in the last half decade, therefore it makes sense these numbers are lower than we are nowadays accustomed to. 
+
+```{r}
+library(dplyr)
+
+# Checking for average salaries greater than $15 million
+high_salary_players <- nba_salary_summary %>%
+  filter(Average_Salary > 15000000)
+
+# Viewing the results
+print(high_salary_players)
+count(high_salary_players)
+```
+Now lets look to answer "Does where you are born influence your likely hood of NBA success?"
+```{r}
+#Separate the birthplace column into two separate rows and look at what city/state they are from
+nba_birthplace_summary <- nba_stats %>%
+  distinct(player_id, .keep_all = TRUE) %>%
+  separate(birthPlace, into = c("City", "State_Country"), sep = ", ", extra = "merge") %>%
+  group_by(player_id, State_Country) %>%
+  ungroup() %>%
+  count(State_Country, sort = TRUE)
+
+#Same thing now, except group by city
+nba_birthplacecity_summary <- nba_stats %>%
+  distinct(player_id, .keep_all = TRUE) %>%
+  separate(birthPlace, into = c("City", "State_Country"), sep = ", ", extra = "merge") %>%
+  group_by(player_id, City) %>%
+  ungroup() %>%
+  count(City, sort = TRUE)
+
+
+
+
+
+
+
+
+```
+
 
 # Questions to possibly research
 
@@ -87,4 +161,19 @@ What position in basketball seems to contribute to winning the most?
 Ideas
 Look to model the perfect NBA "prospect"
 Utilize comparative analysis in order to predict future player success.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
