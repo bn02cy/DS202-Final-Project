@@ -15,6 +15,7 @@ For our project we are combining two different data sets.  The first data frame 
 
 ### Loading packages and data frames
 ```{r, message=FALSE, error=FALSE, warning=FALSE}
+# Load required packages
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
@@ -22,7 +23,7 @@ library(scales)
 ```
 
 ```{r}
-#Draft information Data Frame
+# Draft information Data Frame
 df1 <-
   read.csv(
     "https://query.data.world/s/7fyub35dc6n4crgjosveptbc7uxeo3?dws=00000",
@@ -30,7 +31,7 @@ df1 <-
     stringsAsFactors = FALSE
   )
 
-#Salary information Data Frame
+# Salary information Data Frame
 df2 <-
   read.csv(
     "https://query.data.world/s/6xhwdm7emdeglx4botceotj6udfevo?dws=00000",
@@ -41,28 +42,49 @@ df2 <-
 
 # First Data Cleaning Steps
 
-```{r}
-#Merge df1 (draft info) and df2 (salary statistics)
+```{r, warning=FALSE}
+# Merge df1 (draft info) and df2 (salary statistics)
 nba_stats <-
   merge(df2,
         df1,
         by.x = "player_id",
         by.y = "X_id",
         all.x = TRUE)
-```
 
-```{r}
-#Drop player that were drafted before 1980 
+# Replaces empty values with NA
+nba_stats <- nba_stats %>%
+  mutate(across(where(is.character), ~ na_if(.x, "")))
+
+# Convert data types
+nba_stats <- nba_stats %>%
+  mutate(
+    height = as.numeric(sub("([0-9]+)-([0-9]+)", "\\1", height)) * 12 +
+      as.numeric(sub("([0-9]+)-([0-9]+)", "\\2", height)),
+    career_FG. = as.numeric(career_FG.),
+    career_FT. = as.numeric(career_FT.),
+    career_PER = as.numeric(career_PER),
+    career_PTS = as.numeric(career_PTS),
+    career_TRB = as.numeric(career_TRB),
+    career_WS = as.numeric(career_WS),
+    draft_pick = as.numeric(gsub("[^0-9]", "", draft_pick)),
+    # Extract numeric values from draft pick
+    weight = as.numeric(gsub("[^0-9.]", "", weight))           # Extract numeric values from weight
+  )
+
+# Drop missing values
+nba_stats <- na.omit(nba_stats)
+
+# Drop players that were drafted before 1980
 nba_stats <- nba_stats %>%
   filter(draft_year >= 1980)
-
-#Replaces empty values with NA
-nba_stats <- nba_stats %>% 
-  mutate(across(where(is.character), ~na_if(.x, "")))
 ```
 Note: Players that were drafted before 1980 are not accounted for in order to be more indicative of the modern era.
 
 # Marginal Summaries
+```{r}
+str(nba_stats)
+```
+
 ```{r}
 head(nba_stats)
 ```
@@ -74,6 +96,12 @@ summary(nba_stats)
 ```{r}
 dim(nba_stats)
 ```
+
+# Questions to possibly research
+
+## Does where you are born influence your likely hood of NBA success?
+### - Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
+
 First I want to look at the overall salaries that are listed in this dataset to get a sort of gague of what the numbers should look like.
 ```{r}
 #Make so there are no repeat id's and get salary statistics
@@ -119,7 +147,9 @@ high_salary_players <- nba_salary_summary %>%
 print(high_salary_players)
 count(high_salary_players)
 ```
+
 Now lets look to answer "Does where you are born influence your likely hood of NBA success?"
+
 ```{r}
 #Separate the birthplace column into two separate rows and look at what city/state they are from
 nba_birthplace_summary <- nba_stats %>%
@@ -136,23 +166,11 @@ nba_birthplacecity_summary <- nba_stats %>%
   group_by(player_id, City) %>%
   ungroup() %>%
   count(City, sort = TRUE)
-
-
-
-
-
-
-
-
 ```
 
-
-# Questions to possibly research
-
-What is the ideal height/weight (build) of an NBA Player?
+## What is the ideal height/weight (build) of an NBA Player?
 - Could look at how salary relates to certain measurements a player has.
 ```{r}
-str(nba_stats)
 # Create a copy of nba_stats
 ns_w_cd <- nba_stats
 
@@ -185,40 +203,88 @@ print(height_duration_plot)
 ```
 
 ```{r}
-# Convert height from feet-inches format to inches
-height_inches <- sapply(strsplit(unique_players$height, "-"), function(x) as.numeric(x[1]) * 12 + as.numeric(x[2]))
+# Boxplot of height for high-salary and low-salary players
+ggplot(nba_stats, aes(x = factor(salary > median(salary)), y = height)) +
+  geom_boxplot() +
+  labs(title = "Height Distribution of High-Salary and Low-Salary Players",
+       x = "Salary Level",
+       y = "Height")
 
-# Calculate average height (in inches) and weight (in pounds)
-average_height_inches <- mean(height_inches, na.rm = TRUE)
-average_weight <- mean(as.numeric(gsub("lb", "", unique_players$weight)), na.rm = TRUE)
-
-# Convert average height from inches to feet-inches format
-average_height_feet <- floor(average_height_inches / 12)
-average_height_remainder <- round(average_height_inches %% 12)
-average_height <- paste(average_height_feet, "ft", average_height_remainder, "in")
-
-# Print the results
-cat("Average Height:", average_height, "\n")
-cat("Average Weight:", round(average_weight, 2), "lb\n")
+# Boxplot of weight for high-salary and low-salary players
+ggplot(nba_stats, aes(x = factor(salary > median(salary)), y = weight)) +
+  geom_boxplot() +
+  labs(title = "Weight Distribution of High-Salary and Low-Salary Players",
+       x = "Salary Level",
+       y = "Weight")
 
 ```
 
-Does where you are born influence your likely hood of NBA success?
-- Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
-
-What position in basketball seems to contribute to winning the most?
+## What are the key performance indicators for success in basketball?
+```{r}
+# Create a scatter plot for Position vs. Salary
+ggplot(nba_stats, aes(x = position, y = salary)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Position",
+       x = "Position",
+       y = "Salary") +
+  theme_minimal() +
+  coord_flip()
+```
+```{r}
+#Player Efficiency Rating (PER) vs. Salary
+ggplot(nba_stats, aes(x = career_PER, y = salary)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Player Efficiency Rating (PER) vs. Salary",
+       x = "Career PER",
+       y = "Salary") +
+  theme_minimal()
+```
 
 ```{r}
-
-
+#Win Shares vs. Salary
+ggplot(nba_stats, aes(x = career_WS, y = salary)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Win Shares vs. Salary",
+       x = "Career Win Shares",
+       y = "Salary") +
+  theme_minimal()
 ```
+```{r}
+#Draft Pick vs. Salary
+ggplot(nba_stats, aes(x = draft_pick, y = salary)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Draft Pick vs. Salary",
+       x = "Draft Pick",
+       y = "Salary") +
+  theme_minimal()
+```
+## What position in basketball seems to contribute to winning the most?
 - Could look to analyze win shares and other statistics relating to positions.
+
+```{r}
+# Aggregate data by position and calculate mean career win shares
+position_summary <- nba_stats %>%
+  group_by(position) %>%
+  summarise(mean_career_WS = mean(career_WS, na.rm = TRUE))
+
+# Create a bar plot
+ggplot(position_summary, aes(x = position, y = mean_career_WS)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(
+    title = "Average Career Win Shares by Position",
+    x = "Position",
+    y = "Mean Career Win Shares"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
 Ideas
 Look to model the perfect NBA "prospect"
 Utilize comparative analysis in order to predict future player success.
-
-
 
 
 
