@@ -113,24 +113,23 @@ nba_salary_summary <- nba_stats %>%
     .groups = 'drop'
   )
 
-#Graph to see how much the average player made over their career
-ggplot(data = nba_salary_summary, aes(x = Total_Salary)) +
+ggplot(data = nba_salary_summary, aes(x = Total_Salary, fill = ..count..)) +
   geom_histogram(binwidth = 1000000) +
+  scale_fill_gradient("Count", low = "green", high = "red") +
   scale_x_continuous(labels = label_number()) +
   labs(title = "Histogram of NBA Total Salaries",
        x = "Total Salary",
        y = "Frequency") +
   theme_minimal()
 
-#Graph to see how much the average player makes over the course of one singular season
-ggplot(data = nba_salary_summary, aes(x = Average_Salary)) +
+ggplot(data = nba_salary_summary, aes(x = Average_Salary, fill = ..count..)) +
   geom_histogram(binwidth = 100000) +
+  scale_fill_gradient("Count", low = "green", high = "red") +
   scale_x_continuous(labels = label_number()) +
   labs(title = "Histogram of NBA Average Salaries",
        x = "Average Salary",
        y = "Frequency") +
   theme_minimal()
-
 ```
 I am a little concerned that this dataset is not representative of how much players have made but since the data is pre 2019 this makes sense.
 
@@ -154,19 +153,140 @@ Now lets look to answer "Does where you are born influence your likely hood of N
 #Separate the birthplace column into two separate rows and look at what city/state they are from
 nba_birthplace_summary <- nba_stats %>%
   distinct(player_id, .keep_all = TRUE) %>%
-  separate(birthPlace, into = c("City", "State_Country"), sep = ", ", extra = "merge") %>%
+  separate(
+    birthPlace,
+    into = c("City", "State_Country"),
+    sep = ", ",
+    extra = "merge"
+  ) %>%
   group_by(player_id, State_Country) %>%
   ungroup() %>%
   count(State_Country, sort = TRUE)
 
+#Plot which states/countries have the most players (top 10)
+N <- 10
+
+#Create variable that shows where most players are from (state/country)
+top_nba_locations <- nba_birthplace_summary %>%
+  top_n(N, n) %>%
+  arrange(desc(n))
+
+#Graph Findings
+ggplot(top_nba_locations, aes(
+  x = reorder(State_Country, n),
+  y = n,
+  fill = State_Country
+)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Paired") +
+  labs(x = "State/Country", y = "Number of Players",
+       title = "Number of NBA Players by State/Country") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#Get a table that shows output
+print(nba_birthplace_summary)
+
+
+```
+
+Population for each state/country
+-California 39.03 M
+-New York 19.68 M
+-Illinois 12.58 M
+-Texas 30.03 M
+-Georgia 10.91 M
+```{r}
+#Find players per state (One NBA player every x people)
+Players_CA <- 39030000 / 184 
+Players_NY <- 19680000 / 117
+Players_IL <- 12580000 / 92
+Players_TX <- 30030000 / 68
+Players_GA <- 10910000 / 65
+
+#Expressed as a percentage
+Players_CAper <- 184 / 39030000
+Players_NYper <- 117 / 19680000
+Players_ILper <- 92 / 12580000
+Players_TXper <- 68 / 30030000
+Players_GAper <- 65 / 10910000
+
+print(Players_CA)
+print(Players_NY)
+print(Players_IL)
+print(Players_TX)
+print(Players_GA)
+
+print(Players_CAper)
+print(Players_NYper)
+print(Players_ILper)
+print(Players_TXper)
+print(Players_GAper)
+
+```
+
+
+```{r}
 #Same thing now, except group by city
-nba_birthplacecity_summary <- nba_stats %>%
+nba_birthplace_city_summary <- nba_stats %>%
   distinct(player_id, .keep_all = TRUE) %>%
   separate(birthPlace, into = c("City", "State_Country"), sep = ", ", extra = "merge") %>%
   group_by(player_id, City) %>%
   ungroup() %>%
   count(City, sort = TRUE)
+
+#Plot which cities have the most players (top 10)
+top_nba_locations_cities <- nba_birthplace_city_summary %>%
+  top_n(N, n) %>%
+  arrange(desc(n))
+
+#Plot findings
+ggplot(top_nba_locations_cities, aes(x = reorder(City, n), y = n, fill = City)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Paired") +  # Use a pre-defined color palette
+  labs(x = "City", y = "Number of Players", 
+       title = "Number of NBA Players by City") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#Print table
+print(nba_birthplace_city_summary)
 ```
+Populations for each city
+-Los Angeles: 3.822 M
+-Chicago 2.665 M
+-Philadelphia 1.567 M
+-Washington 671803
+-Detroit 620376
+
+```{r}
+#Find players per state (One NBA player every x people)
+Players_LA <- 3822000 / 54 
+Players_CHI <- 2665000 / 49
+Players_PHIL <- 1567000 / 34
+Players_WSH <- 671803 / 31
+Players_DET <- 620376 / 28
+
+#Now express as a percentage
+Players_LA_per <- 54 / 3822000
+Players_CHI_per <- 49 / 2665000
+Players_PHIL_per <- 34 / 1567000
+Players_WSH_per <- 31 / 671803
+Players_DET_per <- 28 / 620376
+
+
+print(Players_LA_per)
+print(Players_CHI_per)
+print(Players_PHIL_per)
+print(Players_WSH_per)
+print(Players_DET_per)
+
+print(Players_LA)
+print(Players_CHI)
+print(Players_PHIL)
+print(Players_WSH)
+print(Players_DET)
+```
+
+
 
 ## What is the ideal height/weight (build) of an NBA Player?
 - Could look at how salary relates to certain measurements a player has.
@@ -280,6 +400,35 @@ ggplot(position_summary, aes(x = position, y = mean_career_WS)) +
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+- Now look at it with just primary position
+```{r}
+#Make a new column that accounts for the primary position
+df1$primary_position <- sapply(strsplit(df1$position, " and "), `[`, 1)
+
+#Make sure that the number is numeric
+df1$career_WS <- as.numeric(gsub("[^0-9\\.]", "", df1$career_WS))
+
+#Group by primary_position and summarize average win shares
+primary_position_summary <- df1 %>%
+  group_by(primary_position) %>%
+  summarise(average_win_shares = mean(career_WS, na.rm = TRUE)) %>%
+  arrange(desc(average_win_shares))
+
+#Just make sure that we only have the five basic positions
+top_positions <- primary_position_summary %>%
+  arrange(desc(average_win_shares)) %>%
+  top_n(5, average_win_shares)
+
+#Plotting using a bar chart
+ggplot(top_positions, aes(x = reorder(primary_position, -average_win_shares), y = average_win_shares, fill = primary_position)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(x = "Primary Position", y = "Average Win Shares", title = "Top 5 Average Win Shares by Primary Basketball Position") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels for better readability
+  scale_fill_brewer(palette = "Set3")
+
 ```
 
 Ideas
