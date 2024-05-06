@@ -9,9 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Introduction
+In this data science project, we dive into a data set containing NBA player statistics collected over more than 3 decades. This analysis not only offers a deeper understanding of player performance dynamics but also provides valuable insights for teams, analysts, and enthusiasts alike.
+
 # Description of Data Set
 
 For our project we are combining two different data sets.  The first data frame has information for each player such as personal information and draft information like what position, draft year, and draft team.  The second dataframe gives year by year information for each player in the first data frame. This information includes salary, season, and team.
+
+### Ideas
+- Look to determine what makes the perfect NBA "prospect"
+
+- Utilize comparative analysis in order to predict future player success.
+
+- By leveraging advanced analytically techniques, we aim to uncover insightful trends, patterns, and correlations within the data.
 
 ### Loading packages and data frames
 ```{r, message=FALSE, error=FALSE, warning=FALSE}
@@ -21,6 +31,7 @@ library(tidyverse)
 library(dplyr)
 library(scales)
 ```
+
 
 ```{r}
 # Draft information Data Frame
@@ -100,10 +111,13 @@ dim(nba_stats)
 # Questions to possibly research
 
 ## Does where you are born influence your likely hood of NBA success?
-### - Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
+- Could look at salary or sheer number of NBA players from certain regions and then divide by each respective population.
 
 First I want to look at the overall salaries that are listed in this dataset to get a sort of gague of what the numbers should look like.
-```{r}
+
+<div class="center">
+    
+```{r, warning=FALSE}
 #Make so there are no repeat id's and get salary statistics
 nba_salary_summary <- nba_stats %>%
   group_by(player_id) %>%
@@ -112,7 +126,11 @@ nba_salary_summary <- nba_stats %>%
     Average_Salary = mean(salary, na.rm = TRUE),
     .groups = 'drop'
   )
+head(nba_salary_summary)
+```
 
+```{r, warning=FALSE}
+#Plot the frequency of Total Salary
 ggplot(data = nba_salary_summary, aes(x = Total_Salary, fill = ..count..)) +
   geom_histogram(binwidth = 1000000) +
   scale_fill_gradient("Count", low = "green", high = "red") +
@@ -122,6 +140,7 @@ ggplot(data = nba_salary_summary, aes(x = Total_Salary, fill = ..count..)) +
        y = "Frequency") +
   theme_minimal()
 
+#Plot the frequency of Average Salary
 ggplot(data = nba_salary_summary, aes(x = Average_Salary, fill = ..count..)) +
   geom_histogram(binwidth = 100000) +
   scale_fill_gradient("Count", low = "green", high = "red") +
@@ -131,19 +150,20 @@ ggplot(data = nba_salary_summary, aes(x = Average_Salary, fill = ..count..)) +
        y = "Frequency") +
   theme_minimal()
 ```
+
+</div>
+
 I am a little concerned that this dataset is not representative of how much players have made but since the data is pre 2019 this makes sense.
 
 NBA salaries are increasingly inflated, especially in the last half decade, therefore it makes sense these numbers are lower than we are nowadays accustomed to. 
 
 ```{r}
-library(dplyr)
-
 # Checking for average salaries greater than $15 million
 high_salary_players <- nba_salary_summary %>%
   filter(Average_Salary > 15000000)
 
 # Viewing the results
-print(high_salary_players)
+head(high_salary_players)
 count(high_salary_players)
 ```
 
@@ -190,11 +210,11 @@ print(nba_birthplace_summary)
 ```
 
 Population for each state/country
--California 39.03 M
--New York 19.68 M
--Illinois 12.58 M
--Texas 30.03 M
--Georgia 10.91 M
+- California 39.03 M
+- New York 19.68 M
+- Illinois 12.58 M
+- Texas 30.03 M
+- Georgia 10.91 M
 ```{r}
 #Find players per state (One NBA player every x people)
 Players_CA <- 39030000 / 184 
@@ -202,26 +222,31 @@ Players_NY <- 19680000 / 117
 Players_IL <- 12580000 / 92
 Players_TX <- 30030000 / 68
 Players_GA <- 10910000 / 65
+```
 
+```{r, echo=FALSE}
+print(paste("Players_CA = ", Players_CA))
+print(paste("Players_NY = ", Players_NY))
+print(paste("Players_IL = ", Players_IL))
+print(paste("Players_TX = ", Players_TX))
+print(paste("Players_GA = ", Players_GA))
+```
+
+```{r}
 #Expressed as a percentage
 Players_CAper <- 184 / 39030000
 Players_NYper <- 117 / 19680000
 Players_ILper <- 92 / 12580000
 Players_TXper <- 68 / 30030000
 Players_GAper <- 65 / 10910000
+```
 
-print(Players_CA)
-print(Players_NY)
-print(Players_IL)
-print(Players_TX)
-print(Players_GA)
-
-print(Players_CAper)
-print(Players_NYper)
-print(Players_ILper)
-print(Players_TXper)
-print(Players_GAper)
-
+```{r, echo=FALSE}
+print(paste("Players_CAper = ", Players_CAper))
+print(paste("Players_NYper = ", Players_NYper))
+print(paste("Players_ILper = ", Players_ILper))
+print(paste("Players_TXper = ", Players_TXper))
+print(paste("Players_GAper = ", Players_GAper))
 ```
 
 
@@ -248,14 +273,14 @@ ggplot(top_nba_locations_cities, aes(x = reorder(City, n), y = n, fill = City)) 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 #Print table
-print(nba_birthplace_city_summary)
+head(nba_birthplace_city_summary)
 ```
 Populations for each city
--Los Angeles: 3.822 M
--Chicago 2.665 M
--Philadelphia 1.567 M
--Washington 671803
--Detroit 620376
+- Los Angeles: 3.822 M
+- Chicago 2.665 M
+- Philadelphia 1.567 M
+- Washington 671803
+- Detroit 620376
 
 ```{r}
 #Find players per state (One NBA player every x people)
@@ -264,32 +289,41 @@ Players_CHI <- 2665000 / 49
 Players_PHIL <- 1567000 / 34
 Players_WSH <- 671803 / 31
 Players_DET <- 620376 / 28
+```
 
+```{r, echo=FALSE}
+print(paste("Players_CA = ", Players_CA))
+print(paste("Players_CHI = ", Players_CHI))
+print(paste("Players_PHIL = ", Players_PHIL))
+print(paste("Players_WSH = ", Players_WSH))
+print(paste("Players_DET = ", Players_DET))
+```
+
+```{r}
 #Now express as a percentage
 Players_LA_per <- 54 / 3822000
 Players_CHI_per <- 49 / 2665000
 Players_PHIL_per <- 34 / 1567000
 Players_WSH_per <- 31 / 671803
 Players_DET_per <- 28 / 620376
-
-
-print(Players_LA_per)
-print(Players_CHI_per)
-print(Players_PHIL_per)
-print(Players_WSH_per)
-print(Players_DET_per)
-
-print(Players_LA)
-print(Players_CHI)
-print(Players_PHIL)
-print(Players_WSH)
-print(Players_DET)
 ```
 
+```{r, echo=FALSE}
+print(paste("Players_LA_per = ", Players_LA_per))
+print(paste("Players_CHI_per = ", Players_CHI_per))
+print(paste("Players_PHIL_per = ", Players_PHIL_per))
+print(paste("Players_WSH_per = ", Players_WSH_per))
+print(paste("Players_DET_per = ", Players_DET_per))
+```
 
+### Short Summary
+Larger cities are far more likely to produce NBA talent.
 
 ## What is the ideal height/weight (build) of an NBA Player?
 - Could look at how salary relates to certain measurements a player has.
+
+To find a correlation I looked at players that been in the NBA for more than 4 years.
+
 ```{r}
 # Create a copy of nba_stats
 ns_w_cd <- nba_stats
@@ -300,7 +334,11 @@ ns_w_cd$career_duration <- ifelse(ns_w_cd$career_G > 4*82, "Over 4 Years", "Unde
 # Filter to include only unique player IDs
 unique_players <- ns_w_cd %>% 
   distinct(player_id, .keep_all = TRUE)
+```
 
+I then plotted the relationship between that duration and each players height and weight.
+
+```{r}
 # Plotting the correlation between weight and career duration
 weight_duration_plot <- ggplot(unique_players, aes(x = weight, y = career_G, color = career_duration)) +
   geom_point() +
@@ -322,6 +360,8 @@ height_duration_plot <- ggplot(unique_players, aes(x = height, y = career_G, col
 print(height_duration_plot)
 ```
 
+That gave some good information but I would also like to compare height and weight to salary.  To do this I will make 2 side by side box plots.
+
 ```{r}
 # Boxplot of height for high-salary and low-salary players
 ggplot(nba_stats, aes(x = factor(salary > median(salary)), y = height)) +
@@ -338,18 +378,16 @@ ggplot(nba_stats, aes(x = factor(salary > median(salary)), y = weight)) +
        y = "Weight")
 
 ```
+### short summary
+Weight and Height has an influence on success in the NBA, but not as much as we originally thought.
 
 ## What are the key performance indicators for success in basketball?
-```{r}
-# Create a scatter plot for Position vs. Salary
-ggplot(nba_stats, aes(x = position, y = salary)) +
-  geom_boxplot() +
-  labs(title = "Salary Distribution by Position",
-       x = "Position",
-       y = "Salary") +
-  theme_minimal() +
-  coord_flip()
-```
+- Analyze salary VS win shares and some other potential key variables.
+
+<div class="center">
+
+To find some key performance indicators, I plotted salary VS Efficiency Rating, Win shares, Draft Pick, and position.
+
 ```{r}
 #Player Efficiency Rating (PER) vs. Salary
 ggplot(nba_stats, aes(x = career_PER, y = salary)) +
@@ -359,9 +397,7 @@ ggplot(nba_stats, aes(x = career_PER, y = salary)) +
        x = "Career PER",
        y = "Salary") +
   theme_minimal()
-```
 
-```{r}
 #Win Shares vs. Salary
 ggplot(nba_stats, aes(x = career_WS, y = salary)) +
   geom_point(alpha = 0.5) +
@@ -370,8 +406,7 @@ ggplot(nba_stats, aes(x = career_WS, y = salary)) +
        x = "Career Win Shares",
        y = "Salary") +
   theme_minimal()
-```
-```{r}
+
 #Draft Pick vs. Salary
 ggplot(nba_stats, aes(x = draft_pick, y = salary)) +
   geom_point(alpha = 0.5) +
@@ -380,9 +415,26 @@ ggplot(nba_stats, aes(x = draft_pick, y = salary)) +
        x = "Draft Pick",
        y = "Salary") +
   theme_minimal()
+
+# Create a scatter plot for Position vs. Salary
+ggplot(nba_stats, aes(x = position, y = salary)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Position",
+       x = "Position",
+       y = "Salary") +
+  theme_minimal() +
+  coord_flip()
 ```
+
+</div>
+
+### Short Summary
+Moderate correlation between win shares and salary, thus meaning that contributing to winning does not guarantee success but is linked to it.
+
 ## What position in basketball seems to contribute to winning the most?
 - Could look to analyze win shares and other statistics relating to positions.
+
+<div class="center">
 
 ```{r}
 # Aggregate data by position and calculate mean career win shares
@@ -431,20 +483,11 @@ ggplot(top_positions, aes(x = reorder(primary_position, -average_win_shares), y 
 
 ```
 
-Ideas
-Look to model the perfect NBA "prospect"
-Utilize comparative analysis in order to predict future player success.
+</div>
 
+### Short Summary
+Primary position that the contributes the most to winning is center. Also, players with flexibility to play positions 2-4 were the most successful in NBA history.
 
-
-
-
-
-
-
-
-
-
-
-
+## Conclusion
+In conclusion, we determined that larger cities are far more likely to produce NBA talent. Weight and Height does have an influence on success in the NBA, but not as much as we originally thought. There is a moderate correlation between win shares and salary, thus meaning that contributing to winning does not guarantee success but is linked to it. We also determined that more efficient players are paid more and that the primary position that the contributes the most to winning is center. Players with flexibility to play positions 2-4 were the most successful in NBA history.
 
